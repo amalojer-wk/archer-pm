@@ -2,10 +2,9 @@ mod cli;
 mod modifier;
 mod util;
 
-use clap::StructOpt;
-use cli::CLIArgs;
+use clap::Parser;
 
-use cli::Command;
+use cli::{CLIArgs, Command};
 use modifier::execute_modifier_op;
 
 fn main() {
