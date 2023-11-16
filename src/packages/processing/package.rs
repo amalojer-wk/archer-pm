@@ -6,7 +6,7 @@ use std::fmt;
 use std::io::{Read, Seek};
 use std::str::FromStr;
 
-use clap::ArgEnum;
+use clap::ValueEnum;
 use const_format::concatcp;
 use zip::ZipArchive;
 
@@ -27,7 +27,7 @@ pub struct LoadedPackage {
     // solutions: Option<Vec<Solution>>,
 }
 
-#[derive(Clone, Copy, PartialEq, Hash, Debug, ArgEnum)]
+#[derive(Clone, Copy, PartialEq, Hash, Debug, ValueEnum)]
 pub enum PackageObject {
     Datafeeds,
 }
@@ -58,7 +58,7 @@ impl<R: Read + Seek> Package<R> {
         );
 
         if self.data_feeds {
-            loaded_package.load_datafeeds(&mut self.package_archive)?;
+            loaded_package.load_datafeeds(&mut self.package_archive, false)?;
         }
 
         return Ok(loaded_package);
@@ -76,6 +76,7 @@ impl LoadedPackage {
     fn load_datafeeds<R: Read + Seek>(
         &mut self,
         archive: &mut ZipArchive<R>,
+        fail_on_not_found: bool,
     ) -> Result<(), APMError> {
         if let Some(object_group) = self
             .manifest
@@ -90,7 +91,7 @@ impl LoadedPackage {
                 PackageDatafeedsFile::from_xml_bytes(bytes)
                     .map_err(|e| APMErrorType::ProcessingError.into_apm_error(e.to_string()))?,
             );
-        } else {
+        } else if fail_on_not_found {
             return Err(APMErrorType::ProcessingError.into_apm_error(
                 ProcessingErrorType::ManifestTagNotFound
                     .into_error(format!(

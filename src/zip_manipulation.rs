@@ -85,13 +85,13 @@ pub fn add_file_to_archive<A: Read + Seek + Write>(
 ) -> Result<(), APMError> {
     let options = options.unwrap_or(FileOptions::default());
 
-    archive
-        .start_file(file, options)
-        .map_err(|e| APMErrorType::ZIPStartFileError.into_apm_error(e.to_string()))?;
-
     let mut f = OpenOptions::new().read(true).open(&file).map_err(|e| {
         APMErrorType::FileOpenError.into_apm_error(format!("{}\nFile:{}", e.to_string(), file))
     })?;
+
+    archive
+        .start_file(file.replace("\\", "/"), options)
+        .map_err(|e| APMErrorType::ZIPStartFileError.into_apm_error(e.to_string()))?;
 
     copy(&mut f, archive)
         .map_err(|e| APMErrorType::ZIPFileCopyError.into_apm_error(e.to_string()))?;

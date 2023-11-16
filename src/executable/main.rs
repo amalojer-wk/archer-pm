@@ -5,7 +5,7 @@ mod modifier;
 mod tui;
 mod util;
 
-use clap::StructOpt;
+use clap::Parser;
 use cli::CLIArgs;
 
 use cli::Command;
