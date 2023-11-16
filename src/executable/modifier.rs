@@ -117,6 +117,7 @@ fn execute_op(op: ModiferOperation) -> Result<(), APMError> {
             version,
             output_path,
             verbose,
+            full_paths,
         } => {
             if add_to_db {
                 eprintln!("Error: Manager is not enabled.");
@@ -155,7 +156,7 @@ fn execute_op(op: ModiferOperation) -> Result<(), APMError> {
 
             println!("Compressing...");
 
-            create_package_file(&input_directory, &dest, verbose)?;
+            create_package_file(&input_directory, &dest, verbose, full_paths)?;
 
             println!("Successfully created package");
             println!("Output: {}", dest);
@@ -188,12 +189,17 @@ pub fn write_bytes(b: &[u8], p: &str) -> Result<(), APMError> {
     return Ok(());
 }
 
-pub fn create_package_file(dir: &str, out: &str, verbose: bool) -> Result<(), APMError> {
-    let (zip_contents, files) = zip_manipulation::compress_directory(dir, verbose)?;
+pub fn create_package_file(
+    dir: &str,
+    out: &str,
+    verbose: bool,
+    full_paths: bool,
+) -> Result<(), APMError> {
+    let (zip_contents, files) = zip_manipulation::compress_directory(dir, verbose, full_paths)?;
 
     if let Some(files) = files {
-        for f in files {
-            println!("Compressed: {}", f);
+        for (source, dest) in files {
+            println!("Compressed: {} -> {}", source, dest);
         }
     }
 

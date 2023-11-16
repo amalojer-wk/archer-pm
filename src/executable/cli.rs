@@ -123,6 +123,8 @@ pub enum ModiferOperation {
         name: Option<String>,
         #[arg(long = "version", help = "Specify the version of the package")]
         version: Option<String>,
+        #[arg(short, long, help = "Don't strip the base path from the zip file")]
+        full_paths: bool,
         #[arg(
             name = "output_path",
             short = 'o',

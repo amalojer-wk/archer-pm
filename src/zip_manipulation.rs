@@ -2,6 +2,7 @@ use crate::error::{APMError, APMErrorType};
 
 use std::fs::{File, OpenOptions};
 use std::io::{copy, Cursor, Read, Seek, Write};
+use std::path::{Path, PathBuf};
 
 use walkdir::WalkDir;
 use zip::{write::FileOptions, ZipArchive, ZipWriter};
@@ -9,7 +10,8 @@ use zip::{write::FileOptions, ZipArchive, ZipWriter};
 pub fn compress_directory(
     path: &str,
     track_file_names: bool,
-) -> Result<(Vec<u8>, Option<Vec<String>>), APMError> {
+    dont_strip_base_dir: bool,
+) -> Result<(Vec<u8>, Option<Vec<(String, String)>>), APMError> {
     let mut buffer = Vec::new();
     let options = FileOptions::default();
     let mut zip_writer = ZipWriter::new(Cursor::new(&mut buffer));
@@ -31,6 +33,16 @@ pub fn compress_directory(
             continue;
         }
 
+        let stripped_file_name = if dont_strip_base_dir {
+            name.clone()
+        } else {
+            entry
+                .path()
+                .strip_prefix(path)
+                .map(|p| p.display().to_string())
+                .unwrap_or(name.clone())
+        };
+
         if entry.file_type().is_symlink() {
             return Err(APMErrorType::SymlinkFoundError.into_apm_error(format!(
                 "Found symlink at path {}\nSymlinks cannot be compressed.",
@@ -38,17 +50,17 @@ pub fn compress_directory(
             )));
         } else if entry.file_type().is_dir() {
             zip_writer
-                .add_directory(&name, options)
+                .add_directory(&stripped_file_name, options)
                 .map_err(|e| APMErrorType::ZIPAddDirectoryError.into_apm_error(e.to_string()))?;
 
             if let Some(file_names) = &mut file_names {
-                file_names.push(name);
+                file_names.push((name, stripped_file_name));
             }
         } else if entry.file_type().is_file() {
-            add_file_to_archive(&mut zip_writer, &name, Some(options))?;
+            add_file_to_archive(&mut zip_writer, &name, &stripped_file_name, Some(options))?;
 
             if let Some(file_names) = &mut file_names {
-                file_names.push(name);
+                file_names.push((name, stripped_file_name));
             }
         }
     }
@@ -78,19 +90,27 @@ pub fn read_archive_from_bytes(bytes: &[u8]) -> Result<ZipArchive<Cursor<&[u8]>>
         .map_err(|e| APMErrorType::ZIPArchiveOpenError.into_apm_error(e.to_string()));
 }
 
-pub fn add_file_to_archive<A: Read + Seek + Write>(
+pub fn add_file_to_archive<A: Read + Seek + Write, P: AsRef<Path>>(
     archive: &mut ZipWriter<A>,
-    file: &str,
+    file_path: P,
+    file_name: &str,
     options: Option<FileOptions>,
 ) -> Result<(), APMError> {
     let options = options.unwrap_or(FileOptions::default());
 
-    let mut f = OpenOptions::new().read(true).open(&file).map_err(|e| {
-        APMErrorType::FileOpenError.into_apm_error(format!("{}\nFile:{}", e.to_string(), file))
-    })?;
+    let mut f = OpenOptions::new()
+        .read(true)
+        .open(&file_path)
+        .map_err(|e| {
+            APMErrorType::FileOpenError.into_apm_error(format!(
+                "{}\nFile:{}",
+                e.to_string(),
+                file_path.as_ref().display()
+            ))
+        })?;
 
     archive
-        .start_file(file.replace("\\", "/"), options)
+        .start_file(file_name, options)
         .map_err(|e| APMErrorType::ZIPStartFileError.into_apm_error(e.to_string()))?;
 
     copy(&mut f, archive)
