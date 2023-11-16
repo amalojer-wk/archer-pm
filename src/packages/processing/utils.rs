@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_singlee() {
+    fn test_read_single() {
         let f_name = "test_files/test_dir/next_level/test.xml";
         let f = PackageFile::new(f_name.to_string()).unwrap();
         let mut buf = Vec::new();

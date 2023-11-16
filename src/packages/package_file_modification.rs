@@ -1,6 +1,7 @@
 use crate::error::{APMError, APMErrorType};
 use crate::zip_manipulation::read_archive;
 
+use base64::Engine;
 use sha2::{Digest, Sha256};
 use std::fs::OpenOptions;
 use std::io::{Cursor, Read, Write};
@@ -81,7 +82,7 @@ pub fn add_checksum_zip(mut contents: Vec<u8>) -> Result<(Vec<u8>, String), APME
     let options = zip::write::FileOptions::default();
 
     let hash_bytes = generate_archer_hash_from_bytes(&contents);
-    let hash_string = base64::encode(hash_bytes);
+    let hash_string = base64::engine::general_purpose::STANDARD.encode(hash_bytes);
 
     let mut zip_writer = ZipWriter::new_append(Cursor::new(&mut contents))
         .map_err(|e| APMErrorType::ZIPOpenError.into_apm_error(e.to_string()))?;

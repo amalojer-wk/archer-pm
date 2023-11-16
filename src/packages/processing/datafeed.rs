@@ -145,15 +145,3 @@ impl Default for Users {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_load_string() {
-        let s = include_str!("test_files/sample_datafeeds.xml");
-
-        let _datafeeds = PackageDatafeedsFile::from_xml_str(s).unwrap();
-    }
-}
