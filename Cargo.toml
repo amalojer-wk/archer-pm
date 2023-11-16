@@ -23,7 +23,7 @@ xml_exporter = ["serde", "fast-xml"]
 [dependencies]
 zip = "0.6" 
 sha2 = "0.10"
-base64 = "0.13"
+base64 = "0.21"
 walkdir = "2.3"
 paste = "1.0"
 const_format = "0.2"
@@ -31,4 +31,4 @@ clap = { version = "3.1", features = ["derive"], optional = true }
 fast-xml = { version = "0.23", features = ["serialize"], optional = true }
 serde_json = { version = "1.0", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-toml = { version = "0.5", optional = true }
+toml = { version = "0.8", optional = true }

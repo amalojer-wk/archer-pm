@@ -19,7 +19,7 @@ All subcommands support the '-h' option which will show help messages and the av
 
 ### Compressing a directory into a package
 
-To create a package from a directory please specify the directory path, this option will automatically calculate the checksum.
+To create a package from a directory please specify the directory path, this option will automatically calculate the checksum. Important note, the directory used must be a valid language code, i.e. en-US.
 <b>NOTE:</b> No validation is performed as to whether a valid package's contents will exist in this directory, so ensure that the directory contains a valid package's files.
 
 This example compresses a directory called 'package_dir' into a package file called 'package.zip'
